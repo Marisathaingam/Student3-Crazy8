@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student 3 Crazy 8 AI Test</title>
+</head>
+<body>
+  <h1>Student 3 Crazy 8 AI Test</h1>
+  <button id="runAITestButton">Run AI Test</button>
+  <pre id="output"></pre>
+
+  <script type="module">
+    const output = document.getElementById("output");
+    const runButton = document.getElementById("runAITestButton");
+
+    function writeLine(text) {
+      output.textContent += text + "\n";
+    }
+
+    function formatCards(cards) {
+      return cards
+        .map(function (card) {
+          return card.rank + " of " + card.suit;
+        })
+        .join(", ");
+    }
+
+    output.textContent = "Page loaded. Click Run AI Test.\n";
+
+    runButton.addEventListener("click", async function () {
+      output.textContent = "Button clicked.\n";
+
+      try {
+        const ai = await import("./game/ai-final.js?v=" + Date.now());
+
+        writeLine("ai-final.js imported successfully.");
+        writeLine("Exports: " + Object.keys(ai).join(", "));
+        writeLine("AI version: " + ai.AI_VERSION);
+        writeLine("");
+
+        const topCard = { suit: "Hearts", rank: "5" };
+        const currentSuit = "Hearts";
+        const hand = [
+          { suit: "Hearts", rank: "K" },
+          { suit: "Clubs", rank: "5" },
+          { suit: "Spades", rank: "8" },
+          { suit: "Spades", rank: "9" }
+        ];
+
+        const playableCards = ai.getPlayableCards(hand, topCard, currentSuit);
+
+        writeLine("=== Testing getPlayableCards() ===");
+        writeLine("Top card: 5 of Hearts");
+        writeLine("Hand: " + formatCards(hand));
+        writeLine("Playable cards: " + formatCards(playableCards));
+        writeLine("Playable card count: " + playableCards.length);
+
+        writeLine("");
+        writeLine("=== Testing chooseComputerCard() ===");
+        const chosenCard = ai.chooseComputerCard(playableCards);
+        writeLine("Chosen card: " + chosenCard.rank + " of " + chosenCard.suit);
+
+        writeLine("");
+        writeLine("=== Testing chooseBestSuit() ===");
+        const suitTestHand = [
+          { suit: "Clubs", rank: "2" },
+          { suit: "Clubs", rank: "K" },
+          { suit: "Diamonds", rank: "3" }
+        ];
+        const bestSuit = ai.chooseBestSuit(suitTestHand);
+        writeLine("Hand for suit choice: " + formatCards(suitTestHand));
+        writeLine("Best suit: " + bestSuit);
+
+        writeLine("");
+        writeLine("=== Testing computerMove() ===");
+
+        const stateValid = {
+          deck: [{ suit: "Spades", rank: "2" }],
+          discardPile: [{ suit: "Hearts", rank: "5" }],
+          playerHand: [{ suit: "Clubs", rank: "9" }],
+          computerHand: [
+            { suit: "Clubs", rank: "9" },
+            { suit: "Hearts", rank: "K" }
+          ],
+          currentSuit: "Hearts",
+          currentRank: "5",
+          currentTurn: "computer",
+          winner: null,
+          phase: "computerTurn",
+          message: ""
+        };
+
+        const afterValid = ai.computerMove(stateValid);
+
+        writeLine("Computer hand before: " + formatCards(stateValid.computerHand));
+        writeLine("Computer hand after: " + formatCards(afterValid.computerHand));
+        writeLine(
+          "Top discard after: " +
+            afterValid.discardPile[afterValid.discardPile.length - 1].rank +
+            " of " +
+            afterValid.discardPile[afterValid.discardPile.length - 1].suit
+        );
+        writeLine("Current suit after: " + afterValid.currentSuit);
+        writeLine("Current rank after: " + afterValid.currentRank);
+        writeLine("Current turn after: " + afterValid.currentTurn);
+        writeLine("Phase after: " + afterValid.phase);
+        writeLine("Message: " + afterValid.message);
+      } catch (error) {
+        writeLine("ERROR while importing or running ai-final.js:");
+        writeLine(error && error.message ? error.message : String(error));
+        console.error(error);
+      }
+    });
+  </script>
+</body>
+</html>
